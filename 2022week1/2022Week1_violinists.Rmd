@@ -1,0 +1,126 @@
+---
+title: "TidyTuesday 2022: Week 1"
+output:
+  html_document:
+    df_print: paged
+---
+Better late than never... this [#TidyTuesday](https://github.com/rfordatascience/tidytuesday) 
+was bring your own data week. 
+
+I decided I'd try to get a rough estimate of the number of virtuoso violinists (raw and per capita)
+have come from each country. 
+
+I couldn't find a very reliable data source, so I decided to use the number of 
+individual Wikipedia pages as a proxy. If you check out the 
+[Category:Classical violinists by nationality](https://en.wikipedia.org/wiki/Category:Classical_violinists_by_nationality) 
+on Wikipedia, you'll get a list of 
+countries and a number for how many individual pages (one for each player) exist
+for that country. (Note that the English view seemed to have the most data, so I used
+that one.)
+
+I then fetched world population data for the countries listed from [Worldometer](https://www.worldometers.info/world-population/population-by-country/)'s 
+population estimates (2022). (Of course, this is a bit misleading because many of
+the violinists listed are not currently alive, but hey, this is an exercise...)
+
+For the populations of England, Scotland, Wales (all 2019), and the USSR (1989) I 
+used Wikipedia once again. 
+
+A couple things to note:
+
+- There are three subcategories under British classical violinists: 
+English, Scottish, and Welsh violinists. It appears that individuals are filed either
+under one of those three *or* as British (N = 45). I decided to use only the numbers
+under the subcategories, to avoid confusion.
+- French violinists are filed under three subcategories: 20th-century violinists, male
+violinists, and female violinists, each with their own sub-categories. 
+I decided to combine the numbers of all pages under male and female
+violinists. 
+
+
+
+1. Load Data
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(extrafont) # extra fonts
+#font_import() # if it's the first time using extrafont
+loadfonts(device = "win", quiet = TRUE)
+library(ggthemes) # for playing around with, for example
+# theme_economist() 
+# theme_fivethirtyeight()
+# theme_wsj()
+
+data <- readxl::read_excel("2022Week1_violinists.xlsx")
+head(data)
+```
+
+2. Wrangle
+```{r}
+data <- data %>% mutate(percap = (violinists/`population (mil)`))
+
+base <- data %>% arrange(desc(violinists))
+percap <- data %>% arrange(desc(percap), desc(violinists)) 
+
+head(base, 10)
+head(percap, 10)
+```
+
+3. Plot N Violinists per country
+```{r message=FALSE, warning=FALSE}
+
+p1 <- ggplot(base[1:30, ]) + 
+  geom_col( aes(fct_reorder(country,
+                         violinists), `population (mil)`), fill = "slategray", alpha = 0.5) +
+  geom_col( aes(fct_reorder(country,
+                         violinists), violinists), fill = "red4" , alpha = 0.5 ) + 
+  #geom_point( aes(fct_reorder(country,
+  #                       violinists), percap), fill = "darkblue" , alpha = 0.5 ) +
+  theme_classic() + 
+  ggtitle("Virtuoso violinists by nationality", 
+          subtitle = "Arranged by population (2022*) in millions.") +
+  labs(x = NULL, y = NULL, 
+       caption = "Population data source: Worldometer. *For England, Scotland, & Wales, 2019. For USSR, 1989 (Wikipedia). 
+       Violinist data: `Category:Classical violinists by nationality` (Wikipedia).") + 
+  scale_y_discrete(limits = c(0, 50, 100, 200, 300), expand = c(0, 0)) + 
+  coord_flip() +
+  theme(text = element_text(family="Book Antiqua"),
+        panel.background = element_rect(fill = "blanchedalmond"),
+        plot.background = element_rect(fill = "blanchedalmond"),
+        plot.title = element_text(face = "bold", size = 12, color = "darkred"),
+        plot.subtitle = element_text(size = 10),
+        plot.caption = element_text(face = "italic", size = 8),
+        axis.text.x = element_text(size = 8)) 
+
+p1
+```
+
+4. Plot per capita violinists
+```{r message=FALSE, warning=FALSE}
+p2 <- ggplot(percap[1:30,], aes(x = reorder(country, percap), y = percap)) + 
+  geom_segment(aes(y = 0, xend = country, yend = percap, group = country), color = "grey") +
+  geom_point(color = "black", size = 3) +
+  theme_classic() + 
+  ggtitle("Virtuoso violinists per capita (1 million) by nationality", 
+          subtitle = "Per capita violinists calculated based on population (2022*) in millions.") +
+  labs(x = NULL, y = NULL, 
+       caption = "Population data source: Worldometer. *For England, Scotland, & Wales, 2019. For USSR, 1989 (Wikipedia). 
+       Violinist data: `Category:Classical violinists by nationality` (Wikipedia).") + 
+  scale_y_continuous(limits = c(0,11), expand = c(0, 0.3)) + 
+  coord_flip() +
+  theme(text = element_text(family="Times New Roman"),
+        panel.background = element_rect(fill = "blanchedalmond"),
+        plot.background = element_rect(fill = "blanchedalmond"),
+        plot.title = element_text(face = "bold", size = 12, color = "darkred"),
+        plot.subtitle = element_text(size = 10),
+        plot.caption = element_text(face = "italic", size = 8),
+        axis.text.x = element_text(size = 8),
+        legend.position = "none")
+
+p2
+```
+```{r message=FALSE, warning=FALSE, include=FALSE}
+ggsave(p1, filename = "2022Week1_violinists1.png")
+
+ggsave(p2, filename = ".2022Week1_violinists2.png")
+
+```
+
