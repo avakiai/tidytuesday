@@ -76,7 +76,7 @@ p1 <- ggplot(base[1:30, ]) +
   #                       violinists), percap), fill = "darkblue" , alpha = 0.5 ) +
   theme_classic() + 
   ggtitle("Virtuoso violinists by nationality", 
-          subtitle = "Arranged by population (2022*) in millions.") +
+          subtitle = "Number of violinists with Wikipedia pages in red. Population (2022*) in millions in grey.") +
   labs(x = NULL, y = NULL, 
        caption = "Population data source: Worldometer. *For England, Scotland, & Wales, 2019. For USSR, 1989 (Wikipedia). 
        Violinist data: `Category:Classical violinists by nationality` (Wikipedia).") + 
@@ -120,7 +120,7 @@ p2
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 ggsave(p1, filename = "2022Week1_violinists1.png")
 
-ggsave(p2, filename = ".2022Week1_violinists2.png")
+ggsave(p2, filename = "2022Week1_violinists2.png")
 
 ```
 
